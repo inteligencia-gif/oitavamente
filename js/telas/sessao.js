@@ -163,39 +163,56 @@ function Conduzir({ dados, acao }) {
 
   return html`<div class="conduzir">
     <section class="cartao ao-vivo">
-      <div class="ao-vivo-estado">
-        <span class="rotulo-campo">No telão agora</span>
-        ${foco
-          ? html`<strong>${rotulo} ${foco.ordem}: ${foco.titulo}</strong>
-              <div class="ao-vivo-linha">
-                <span class=${`estado ${sessao.envio_aberto || sessao.votacao_aberta || sessao.resultado_visivel ? 'estado-aberto' : 'estado-fechado'}`}>
-                  ${sessao.envio_aberto ? 'Envio aberto' : sessao.votacao_aberta ? 'Votação aberta' : sessao.resultado_visivel ? 'Top 3 na tela' : 'Envio fechado'}</span>
-                ${sessao.votacao_aberta || votantesFoco ? html`<span class="suave votantes">${plural(votantesFoco, 'pessoa votou', 'pessoas votaram')}</span>` : null}
-                ${sessao.envio_aberto ? html`<${Cronometro} restante=${restante} />` : null}
-                ${sessao.envio_aberto && restante > 0 ? html`<button class="btn btn-fantasma btn-pequeno" onClick=${maisUmMinuto}>+1 min</button>` : null}
-                ${sessao.votacao_aberta ? html`<${Cronometro} restante=${restanteVoto} alerta=${15} />` : null}
-                ${sessao.votacao_aberta && restanteVoto > 0 ? html`<button class="btn btn-fantasma btn-pequeno" onClick=${maisUmMinuto}>+1 min</button>` : null}
-              </div>`
-          : html`<strong>${sessao.status === 'encerrada' ? 'Sessão encerrada' : 'Tela de entrada (QR code)'}</strong>`}
+      <div class="ao-vivo-topo">
+        <div class="ao-vivo-estado">
+          <span class="rotulo-campo">No telão agora</span>
+          ${foco
+            ? html`<strong>${rotulo} ${foco.ordem}: ${foco.titulo}</strong>
+                <div class="ao-vivo-linha">
+                  <span class=${`estado ${sessao.envio_aberto || sessao.votacao_aberta || sessao.resultado_visivel ? 'estado-aberto' : 'estado-fechado'}`}>
+                    ${sessao.envio_aberto ? 'Envio aberto' : sessao.votacao_aberta ? 'Votação aberta' : sessao.resultado_visivel ? 'Top 3 na tela' : 'Envio fechado'}</span>
+                  ${sessao.votacao_aberta || votantesFoco ? html`<span class="suave votantes">${plural(votantesFoco, 'pessoa votou', 'pessoas votaram')}</span>` : null}
+                  ${sessao.envio_aberto ? html`<${Cronometro} restante=${restante} />` : null}
+                  ${sessao.envio_aberto && restante > 0 ? html`<button class="btn btn-fantasma btn-pequeno" onClick=${maisUmMinuto}>+1 min</button>` : null}
+                  ${sessao.votacao_aberta ? html`<${Cronometro} restante=${restanteVoto} alerta=${15} />` : null}
+                  ${sessao.votacao_aberta && restanteVoto > 0 ? html`<button class="btn btn-fantasma btn-pequeno" onClick=${maisUmMinuto}>+1 min</button>` : null}
+                </div>`
+            : html`<strong>${sessao.status === 'encerrada' ? 'Sessão encerrada' : 'Tela de entrada (QR code)'}</strong>`}
+        </div>
+        <div class="ao-vivo-secundarias">
+          ${foco ? html`<button class="btn btn-fantasma btn-pequeno" title="Volta o telão para a tela de entrada com o QR code"
+              onClick=${() => atualizar({ atividade_foco: null, envio_aberto: false, votacao_aberta: false, resultado_visivel: false }, 'Telão na tela de entrada.')}>Mostrar QR code</button>` : null}
+          ${sessao.status === 'ao_vivo' ? html`<button class="btn btn-fantasma btn-pequeno perigo" onClick=${() => {
+            if (confirm('Encerrar a sessão? Os participantes verão a mensagem de encerramento.')) {
+              atualizar({ status: 'encerrada', envio_aberto: false, votacao_aberta: false, atividade_foco: null }, 'Sessão encerrada.');
+            }
+          }}>Encerrar sessão</button>` : null}
+        </div>
       </div>
-      <div class="acoes">
-        ${foco ? html`<button class="btn btn-escuro"
-            onClick=${() => atualizar({ envio_aberto: !sessao.envio_aberto }, sessao.envio_aberto ? 'Envio fechado.' : 'Envio reaberto.')}>
-            ${sessao.envio_aberto ? 'Fechar envio' : minutos > 0 ? `Reabrir envio (${minutos} min)` : 'Reabrir envio'}</button>` : null}
-        ${foco && !sessao.envio_aberto ? html`<button class=${`btn ${sessao.votacao_aberta ? 'btn-escuro' : 'btn-fantasma'}`}
-            onClick=${() => atualizar({ votacao_aberta: !sessao.votacao_aberta }, sessao.votacao_aberta ? 'Votação encerrada.' : 'Votação aberta nos celulares.')}>
-            ${sessao.votacao_aberta ? 'Encerrar votação' : (sessao.tempo_votacao_seg ?? 60) > 0 ? `Abrir votação (${Math.round((sessao.tempo_votacao_seg ?? 60) / 60)} min)` : 'Abrir votação'}</button>` : null}
-        ${foco && !sessao.envio_aberto && !sessao.votacao_aberta && votantesFoco > 0 ? html`<button class=${`btn ${sessao.resultado_visivel ? 'btn-fantasma' : 'btn-primario'}`}
-            onClick=${() => atualizar({ resultado_visivel: !sessao.resultado_visivel }, sessao.resultado_visivel ? 'Resultado escondido.' : 'As 3 mais votadas estão no telão e nos celulares.')}>
-            ${sessao.resultado_visivel ? 'Esconder o top 3' : 'Mostrar as 3 mais votadas'}</button>` : null}
-        ${proxima ? html`<button class="btn btn-primario" onClick=${() => focar(proxima)}>
-            ${foco ? `Próxima: ${rotulo.toLowerCase()} ${proxima.ordem}` : `Começar: ${rotulo.toLowerCase()} 1`} →</button>` : null}
-        ${foco ? html`<button class="btn btn-fantasma" onClick=${() => atualizar({ atividade_foco: null, envio_aberto: false, votacao_aberta: false, resultado_visivel: false }, 'Telão na tela de entrada.')}>Mostrar QR code</button>` : null}
-        ${sessao.status === 'ao_vivo' ? html`<button class="btn btn-fantasma" onClick=${() => {
-          if (confirm('Encerrar a sessão? Os participantes verão a mensagem de encerramento.')) {
-            atualizar({ status: 'encerrada', envio_aberto: false, votacao_aberta: false, atividade_foco: null }, 'Sessão encerrada.');
-          }
-        }}>Encerrar sessão</button>` : null}
+
+      <div class="ao-vivo-fluxo">
+        <div class="ao-vivo-grupo">
+          <span class="rotulo-campo">Rodada</span>
+          <div class="acoes">
+            ${foco ? html`<button class="btn btn-escuro"
+                onClick=${() => atualizar({ envio_aberto: !sessao.envio_aberto }, sessao.envio_aberto ? 'Envio fechado.' : 'Envio reaberto.')}>
+                ${sessao.envio_aberto ? 'Fechar envio' : minutos > 0 ? `Reabrir envio (${minutos} min)` : 'Reabrir envio'}</button>` : null}
+            ${proxima ? html`<button class="btn btn-primario" onClick=${() => focar(proxima)}>
+                ${foco ? `Próxima: ${rotulo.toLowerCase()} ${proxima.ordem}` : `Começar: ${rotulo.toLowerCase()} 1`} →</button>` : null}
+            ${foco && !proxima ? html`<span class="suave ao-vivo-fim">Última ${rotulo.toLowerCase()} do roteiro</span>` : null}
+          </div>
+        </div>
+        ${foco && !sessao.envio_aberto ? html`<div class="ao-vivo-grupo">
+          <span class="rotulo-campo">Votação</span>
+          <div class="acoes">
+            <button class=${`btn ${sessao.votacao_aberta ? 'btn-escuro' : 'btn-fantasma'}`}
+              onClick=${() => atualizar({ votacao_aberta: !sessao.votacao_aberta }, sessao.votacao_aberta ? 'Votação encerrada.' : 'Votação aberta nos celulares.')}>
+              ${sessao.votacao_aberta ? 'Encerrar votação' : (sessao.tempo_votacao_seg ?? 60) > 0 ? `Abrir votação (${Math.round((sessao.tempo_votacao_seg ?? 60) / 60)} min)` : 'Abrir votação'}</button>
+            ${!sessao.votacao_aberta && votantesFoco > 0 ? html`<button class="btn btn-fantasma"
+                onClick=${() => atualizar({ resultado_visivel: !sessao.resultado_visivel }, sessao.resultado_visivel ? 'Resultado escondido.' : 'As 3 mais votadas estão no telão e nos celulares.')}>
+                ${sessao.resultado_visivel ? 'Esconder o top 3' : 'Mostrar o top 3'}</button>` : null}
+          </div>
+        </div>` : null}
       </div>
       ${foco ? html`<div class="ao-vivo-visao">
         <span class="rotulo-campo">${sessao.envio_aberto ? 'Quando o envio fechar, o telão mostra' : 'O telão está mostrando'}</span>

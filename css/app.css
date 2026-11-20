@@ -534,3 +534,17 @@ body[data-tela="s"] { background: #FFFFFF; }
 /* Tela de espera: cachorrinho acenando */
 .espera { padding-top: 24px; }
 .espera-ilustracao { width: min(56vw, 220px); height: auto; margin-bottom: 6px; animation: chegar .6s cubic-bezier(.2, .8, .2, 1.2) both; }
+
+/* Barra "No telão agora": fluxo principal embaixo, ações raras no canto */
+.ao-vivo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; justify-content: stretch; align-items: stretch; }
+.ao-vivo-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px 20px; flex-wrap: wrap; }
+.ao-vivo-secundarias { display: flex; gap: 6px; flex-wrap: wrap; }
+.ao-vivo-secundarias .perigo { color: var(--oo-alerta); }
+.ao-vivo-fluxo { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 28px; }
+.ao-vivo-grupo { display: grid; gap: 8px; }
+.ao-vivo-grupo .rotulo-campo { margin: 0; }
+.ao-vivo-grupo + .ao-vivo-grupo { padding-left: 28px; box-shadow: inset 1px 0 0 var(--oo-linha); }
+.ao-vivo-fim { font-size: 13px; align-self: center; }
+@media (max-width: 760px) {
+  .ao-vivo-grupo + .ao-vivo-grupo { padding-left: 0; box-shadow: none; }
+}
