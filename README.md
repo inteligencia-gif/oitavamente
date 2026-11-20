@@ -7,10 +7,9 @@ Este MVP cobre a dinâmica do Método Cooperar com a Unicred.
 
 | Endereço | Quem usa | O que faz |
 |---|---|---|
-| `#/` | Participante | Digita o código da sessão |
 | `#/s/CODIGO` | Participante (link do QR code) | Vê a pergunta aberta, escreve, marca a etiqueta e envia |
 | `#/telao/CODIGO?k=CHAVE` | Telão | Tela de entrada com QR code, pergunta em foco, cartões ao vivo, contadores |
-| `#/painel` | Facilitador | Sessões, condução ao vivo, moderação, configuração e exportação |
+| `#/` ou `#/painel` | Facilitador | Sessões, condução ao vivo, moderação, configuração e exportação |
 
 ## Como rodar
 

@@ -225,7 +225,7 @@ textarea.campo { resize: vertical; min-height: 44px; }
 .telao-qr-canto .qr, .telao-qr-canto img { width: min(8vw, 13vh) !important; height: min(8vw, 13vh) !important; }
 .telao-qr-texto { display: grid; text-align: right; line-height: 1.2; }
 .telao-qr-texto span { font-size: .8em; opacity: .7; }
-.telao-qr-texto strong { font-size: 1.7em; font-weight: 400; letter-spacing: .1em; }
+.telao-qr-texto strong { font-size: 1.2em; font-weight: 400; }
 .telao-qr-texto small { font-size: .72em; opacity: .6; }
 .qr img { display: block; }
 

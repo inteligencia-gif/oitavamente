@@ -2,7 +2,7 @@ import { useRef, useLayoutEffect, useEffect, useState } from 'preact/hooks';
 import { html } from '../html.js';
 import { backend } from '../backend/index.js';
 import { useAoVivo } from '../lib/aoVivo.js';
-import { linkParticipante, linkCurto, plural } from '../lib/util.js';
+import { linkParticipante, plural } from '../lib/util.js';
 import { varsVisual, varsEtiqueta } from '../lib/visual.js';
 import { Assinatura, Carregando, MarcaCliente, QR } from './comum.js';
 import { Cronometro, useDesvio, useRestante, envioAberto } from '../lib/cronometro.js';
@@ -94,8 +94,7 @@ export function Telao({ codigo, chave }) {
           <div class="telao-lobby-texto">
             <div class="telao-rotulo">${sessao.cliente}</div>
             <h1>${sessao.nome}</h1>
-            <p>Aponte a câmera do celular para o QR code<br />ou acesse <strong>${linkCurto()}</strong> e digite o código</p>
-            <div class="telao-codigo-grande">${sessao.codigo}</div>
+            <p>Aponte a câmera do celular para o QR code ao lado.</p>
             <p class="telao-lobby-sub">Sem cadastro e sem aplicativo. ${plural(conectados, 'pessoa conectada', 'pessoas conectadas')}.</p>
           </div>
           <div class="telao-lobby-qr"><${QR} texto=${link} tamanho=${380} escura=${sessao.visual?.escura || '#131313'} /></div>
@@ -138,7 +137,7 @@ export function Telao({ codigo, chave }) {
     <footer class="telao-rodape">
       <${Assinatura} classe="assinatura-telao" />
       ${foco ? html`<div class="telao-qr-canto">
-        <div class="telao-qr-texto"><span>Entre pelo celular</span><strong>${sessao.codigo}</strong><small>${linkCurto()}</small></div>
+        <div class="telao-qr-texto"><strong>Entre pelo celular</strong><span>aponte a câmera</span></div>
         <${QR} texto=${link} tamanho=${120} escura=${sessao.visual?.escura || '#131313'} />
       </div>` : null}
     </footer>

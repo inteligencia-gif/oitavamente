@@ -2,13 +2,12 @@ import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { html } from './html.js';
 import { normalizarCodigo } from './lib/util.js';
-import { Inicio } from './telas/inicio.js';
 import { Participante } from './telas/participante.js';
 import { Telao } from './telas/telao.js';
 import { Painel } from './telas/painel.js';
 
 // Rotas por hash, para funcionar em qualquer hospedagem estática:
-//   #/              entrada por código
+//   #/              painel do facilitador (login)
 //   #/s/CODIGO      participante (é o link do QR code)
 //   #/telao/CODIGO?k=CHAVE   telão
 //   #/painel        painel do facilitador
@@ -28,7 +27,7 @@ function App() {
   }, []);
 
   const [a, b] = rota.partes;
-  document.body.dataset.tela = a || 'inicio';
+  document.body.dataset.tela = a || 'painel';
   if (a === 's' && b) {
     const c = normalizarCodigo(b);
     return html`<${Participante} key=${c} codigo=${c} />`;
@@ -37,8 +36,8 @@ function App() {
     const c = normalizarCodigo(b);
     return html`<${Telao} key=${c} codigo=${c} chave=${rota.q.get('k')} />`;
   }
-  if (a === 'painel') return html`<${Painel} sessaoId=${b} />`;
-  return html`<${Inicio} />`;
+  // o endereço principal abre o painel (login); participantes entram só pelo QR code da sessão
+  return html`<${Painel} sessaoId=${a === 'painel' ? b : undefined} />`;
 }
 
 render(html`<${App} />`, document.getElementById('app'));

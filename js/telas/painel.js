@@ -47,7 +47,6 @@ function Login({ aoEntrar }) {
       <input id="senha" class="campo" type="password" autocomplete="current-password" value=${senha} onInput=${(e) => setSenha(e.currentTarget.value)} required />
       ${erro ? html`<p class="aviso aviso-erro">${erro}</p>` : null}
       <button class="btn btn-escuro" disabled=${indo}>${indo ? 'Entrando…' : 'Entrar'}</button>
-      <a class="link-discreto" href="#/">Voltar</a>
     </form>
   </main>`;
 }

@@ -46,9 +46,8 @@ export function Participante({ codigo }) {
   if (dados === null) {
     return html`<main class="tema participante" style=${varsVisual()}>
       <div class="participante-miolo centro">
-        <h1>Código não encontrado</h1>
-        <p class="suave">Confira o código <strong>${codigo}</strong> no telão e tente de novo.</p>
-        <a class="btn btn-primario" href="#/">Digitar o código</a>
+        <h1>Sessão não encontrada</h1>
+        <p class="suave">Aponte a câmera do celular para o QR code que está no telão.</p>
       </div><${Assinatura} /></main>`;
   }
 
