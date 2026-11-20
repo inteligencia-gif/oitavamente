@@ -18,7 +18,7 @@ const SEQUENCIA = ['menina', 'cachorro', 'menino'];
 function ilustracao(ordem) {
   const n = Math.max(0, (ordem || 1) - 1);
   const grupo = ILUSTRACOES[SEQUENCIA[n % 3]];
-  return `assets/ilustracoes/${grupo[Math.floor(n / 3) % grupo.length]}.png`;
+  return `assets/ilustracoes/${grupo[Math.floor(n / 3) % grupo.length]}.png?v=3`;
 }
 
 // Novas respostas dos outros não mudam a tela do participante: só ouve
@@ -87,7 +87,7 @@ export function Participante({ codigo }) {
 
 function Espera({ titulo, texto }) {
   return html`<section class="espera">
-    <img class="espera-ilustracao" src="assets/ilustracoes/cachorro-acenando.png" alt="" width="220" height="220" />
+    <img class="espera-ilustracao" src="assets/ilustracoes/cachorro-acenando.png?v=3" alt="" width="220" height="220" />
     <h1>${titulo}</h1>
     <p class="suave">${texto}</p>
   </section>`;
