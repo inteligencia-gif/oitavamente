@@ -112,7 +112,9 @@ textarea.campo { resize: vertical; min-height: 44px; }
 .painel-marca { height: 22px; }
 
 /* ---------- Participante (celular) ---------- */
-.participante { min-height: 100dvh; display: flex; flex-direction: column; background: var(--fundo); color: var(--tinta); }
+/* tela do participante: fundo sempre branco, independente da cor da sessão ou do modo escuro do celular */
+.participante { min-height: 100dvh; display: flex; flex-direction: column; background: #FFFFFF; color: var(--oo-preto); }
+body[data-tela="s"] { background: #FFFFFF; }
 .participante .suave { color: color-mix(in srgb, var(--tinta) 72%, transparent); }
 .participante-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; background: var(--escura); color: var(--sobre-escura); }
 .participante-sessao { font-size: 13px; opacity: .75; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -152,7 +154,7 @@ textarea.campo { resize: vertical; min-height: 44px; }
 .etiqueta-opcao:has(input:focus-visible) { box-shadow: var(--anel-foco); }
 .envio-fechado { display: grid; justify-items: center; gap: 10px; padding: 18px 8px 8px; text-align: center; margin-top: 8px; }
 .fechado-titulo { font-size: 26px; }
-.fechado-ilustracao { height: min(34vh, 260px); width: auto; max-width: 80vw; object-fit: contain; mix-blend-mode: multiply; animation: chegar .6s cubic-bezier(.2, .8, .2, 1.2) both; }
+.fechado-ilustracao { height: min(34vh, 260px); width: auto; max-width: 80vw; object-fit: contain; animation: chegar .6s cubic-bezier(.2, .8, .2, 1.2) both; }
 .fechado-texto { max-width: 30ch; color: var(--oo-tinta-2); font-size: 15px; }
 .minhas { margin-top: 10px; }
 .minhas h2, .historico summary { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
@@ -531,4 +533,4 @@ textarea.campo { resize: vertical; min-height: 44px; }
 
 /* Tela de espera: cachorrinho acenando */
 .espera { padding-top: 24px; }
-.espera-ilustracao { width: min(56vw, 220px); height: auto; mix-blend-mode: multiply; margin-bottom: 6px; animation: chegar .6s cubic-bezier(.2, .8, .2, 1.2) both; }
+.espera-ilustracao { width: min(56vw, 220px); height: auto; margin-bottom: 6px; animation: chegar .6s cubic-bezier(.2, .8, .2, 1.2) both; }
