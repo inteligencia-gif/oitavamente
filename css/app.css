@@ -530,5 +530,3 @@ textarea.campo { resize: vertical; min-height: 44px; }
 /* Tela de espera: cachorrinho acenando */
 .espera { padding-top: 24px; }
 .espera-ilustracao { width: min(56vw, 220px); height: auto; mix-blend-mode: multiply; margin-bottom: 6px; animation: chegar .6s cubic-bezier(.2, .8, .2, 1.2) both; }
-/* fundo das ilustrações quase branco vira branco puro (some o quadrado cinza) */
-.espera-ilustracao, .fechado-ilustracao { filter: brightness(1.06) contrast(1.12); }
