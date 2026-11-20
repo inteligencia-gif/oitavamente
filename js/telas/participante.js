@@ -68,7 +68,7 @@ export function Participante({ codigo }) {
         ? html`<${Espera} titulo="A dinâmica terminou" texto="Obrigado pela participação!" />`
         : !foco
           ? html`<${Espera} titulo="Você está dentro" texto="Aguarde: a próxima pergunta vai aparecer aqui." />`
-          : sessao.resultado_visivel
+          : sessao.resultado_visivel && (dados.top || []).length
           ? html`<${PrioridadesSala} key=${foco.id} top=${dados.top || []} etiquetas=${etiquetas} />`
           : sessao.votacao_aberta && restanteVoto === 0
           ? html`<${Encerrado} titulo="Votação encerrada!" texto="Obrigado! Acompanhe a conversa no telão." ordem=${foco.ordem} />`

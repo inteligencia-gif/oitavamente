@@ -41,7 +41,12 @@ export const MAX_VOTOS = 3;
 const TEMPO_PADRAO = 480; // 8 minutos
 // passou do prazo e da tolerância de quem ainda estava escrevendo
 const esgotado = (s) => Boolean(s.envio_prazo) && Date.now() >= Date.parse(s.envio_prazo) + TOLERANCIA_MS;
-const publica = (s) => Object.fromEntries(PUBLICOS.map((k) => [k, s[k]]));
+const temVotos = (db, s) => db.votos.some((v) => v.atividade_id === s.atividade_foco);
+// O top 3 aparece quando o facilitador revela ou assim que o tempo da votação acaba
+// (mesmo que o painel ainda não tenha fechado a votação), desde que alguém tenha votado.
+const resultadoAtivo = (db, s) => Boolean(s.resultado_visivel
+  || (s.votacao_aberta && s.votacao_prazo && Date.now() >= Date.parse(s.votacao_prazo) && temVotos(db, s)));
+const publicaDe = (db, s) => ({ ...Object.fromEntries(PUBLICOS.map((k) => [k, s[k]])), resultado_visivel: resultadoAtivo(db, s) });
 
 // As mais votadas da pergunta em foco: posição 1 a 3, com empates (1, 2, 2, 4…).
 function topPrioridades(db, s) {
@@ -134,7 +139,7 @@ export const backend = {
     }
     return {
       agora: agora(),
-      sessao: publica(s),
+      sessao: publicaDe(db, s),
       atividades: db.atividades.filter((a) => a.sessao_id === s.id).sort(porOrdem),
       etiquetas: db.etiquetas.filter((e) => e.sessao_id === s.id).sort(porOrdem),
       minhas: db.respostas
@@ -145,7 +150,7 @@ export const backend = {
         ? db.respostas.filter((r) => r.atividade_id === s.atividade_foco && r.visivel && r.teste === s.modo_teste)
           .map((r) => ({ id: r.id, texto: r.texto, etiqueta_id: r.etiqueta_id }))
         : [],
-      top: s.resultado_visivel ? topPrioridades(db, s) : [],
+      top: resultadoAtivo(db, s) ? topPrioridades(db, s) : [],
       meus_votos: s.votacao_aberta
         ? db.votos.filter((v) => v.atividade_id === s.atividade_foco && v.participante_id === participanteId).map((v) => v.resposta_id)
         : [],
@@ -212,7 +217,7 @@ export const backend = {
     const daSessao = db.respostas.filter((r) => r.sessao_id === s.id && r.visivel && r.teste === s.modo_teste);
     return {
       agora: agora(),
-      sessao: publica(s),
+      sessao: publicaDe(db, s),
       atividades: db.atividades.filter((a) => a.sessao_id === s.id).sort(porOrdem),
       etiquetas: db.etiquetas.filter((e) => e.sessao_id === s.id).sort(porOrdem),
       respostas: daSessao.filter((r) => r.atividade_id === s.atividade_foco).sort((a, b) => b.criado_em.localeCompare(a.criado_em)),
@@ -220,7 +225,7 @@ export const backend = {
       conectados: conectados(db, s.id),
       // só quantas pessoas votaram: o resultado fica no painel
       votantes: new Set(db.votos.filter((v) => v.atividade_id === s.atividade_foco).map((v) => v.participante_id)).size,
-      top: s.resultado_visivel ? topPrioridades(db, s) : [],
+      top: resultadoAtivo(db, s) ? topPrioridades(db, s) : [],
     };
   },
 
@@ -285,6 +290,8 @@ export const backend = {
     // revelar o resultado encerra a votação; trocar de pergunta, abrir envio ou votação esconde de novo
     if (patch.resultado_visivel) { s.votacao_aberta = false; s.envio_aberto = false; }
     else if (antes.atividade_foco !== s.atividade_foco || (s.envio_aberto && !antes.envio_aberto) || (s.votacao_aberta && !antes.votacao_aberta)) s.resultado_visivel = false;
+    // fim da votação na mesma pergunta (pelo tempo ou pelo botão): o top 3 aparece sozinho
+    else if (antes.votacao_aberta && !s.votacao_aberta && patch.resultado_visivel === undefined && temVotos(db, s)) s.resultado_visivel = true;
     // cronômetro da votação: começa ao abrir, zera ao fechar
     if (!s.votacao_aberta) s.votacao_prazo = null;
     else if (!antes.votacao_aberta) {
