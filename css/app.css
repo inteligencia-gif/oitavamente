@@ -526,3 +526,9 @@ textarea.campo { resize: vertical; min-height: 44px; }
 .prioridade-celular .prioridade-posicao { flex: 0 0 auto; display: grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px; border-radius: 999px; background: var(--oo-preto); color: var(--oo-amarelo); font-size: 14px; }
 .prioridade-meta { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .envio-fechado > .tempo-celular { justify-self: stretch; width: 100%; margin-bottom: 4px; }
+
+/* Tela de espera: cachorrinho acenando */
+.espera { padding-top: 24px; }
+.espera-ilustracao { width: min(56vw, 220px); height: auto; mix-blend-mode: multiply; margin-bottom: 6px; animation: chegar .6s cubic-bezier(.2, .8, .2, 1.2) both; }
+/* fundo das ilustrações quase branco vira branco puro (some o quadrado cinza) */
+.espera-ilustracao, .fechado-ilustracao { filter: brightness(1.06) contrast(1.12); }

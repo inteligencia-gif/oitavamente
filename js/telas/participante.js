@@ -87,7 +87,7 @@ export function Participante({ codigo }) {
 
 function Espera({ titulo, texto }) {
   return html`<section class="espera">
-    <div class="espera-pulso" aria-hidden="true"></div>
+    <img class="espera-ilustracao" src="assets/ilustracoes/cachorro-acenando.webp" alt="" width="220" height="220" />
     <h1>${titulo}</h1>
     <p class="suave">${texto}</p>
   </section>`;
