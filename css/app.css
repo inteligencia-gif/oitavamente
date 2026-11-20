@@ -288,19 +288,21 @@ textarea.campo { resize: vertical; min-height: 44px; }
 .ao-vivo-estado .rotulo-campo { margin: 0; }
 .ao-vivo-estado strong { font-size: 17px; }
 .ao-vivo .estado { font-size: 12px; }
-.conduzir-grade { display: grid; grid-template-columns: 300px minmax(0, 1fr) 240px; gap: 20px; align-items: start; }
+.conduzir-grade { display: grid; grid-template-columns: 340px minmax(0, 1fr) 240px; gap: 20px; align-items: start; }
 
-.roteiro ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.roteiro-item { display: flex; align-items: center; gap: 6px; border-radius: var(--raio-p); padding: 2px 4px 2px 0; }
+.roteiro ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
+.roteiro-item { display: flex; align-items: center; gap: 6px; min-width: 0; border-radius: var(--raio-p); padding: 2px 6px 2px 0; }
 .roteiro-item.vendo { background: var(--oo-suave); }
 .roteiro-item { transition: background-color .15s; }
 .roteiro-item.em-foco { background: color-mix(in srgb, var(--oo-amarelo) 35%, transparent); }
 .roteiro-ver { flex: 1; display: flex; align-items: center; gap: 10px; background: none; border: 0; text-align: left; padding: 8px; min-width: 0; }
 .roteiro-num { flex: 0 0 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 400; background: var(--oo-suave); }
 .em-foco .roteiro-num { background: var(--oo-preto); color: var(--oo-amarelo); }
-.roteiro-titulo { flex: 1; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roteiro-titulo { flex: 1; min-width: 0; font-size: 14px; line-height: 1.3; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .roteiro-n { font-size: 12px; color: var(--oo-tinta-3); font-variant-numeric: tabular-nums; }
-.roteiro-tag { font-size: 11px; font-weight: 400; color: var(--oo-preto); text-transform: uppercase; padding: 0 8px; white-space: nowrap; }
+.roteiro-tag { flex: 0 0 auto; font-size: 11px; font-weight: 400; color: var(--oo-preto); text-transform: uppercase; padding: 0 4px; white-space: nowrap; }
+.roteiro-item .btn { flex: 0 0 auto; }
+.roteiro { min-width: 0; }
 
 .moderacao-cabeca { margin-bottom: 12px; }
 .moderacao-cabeca h2 { margin: 2px 0 4px; font-size: 20px; }
@@ -353,7 +355,7 @@ textarea.campo { resize: vertical; min-height: 44px; }
 .toast-erro { background: var(--oo-alerta); }
 
 @media (max-width: 1180px) {
-  .conduzir-grade { grid-template-columns: 260px minmax(0, 1fr); }
+  .conduzir-grade { grid-template-columns: 300px minmax(0, 1fr); }
   .acesso { grid-column: 1 / -1; grid-template-columns: auto 1fr; justify-items: start; text-align: left; }
 }
 @media (max-width: 760px) {
