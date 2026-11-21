@@ -6,7 +6,7 @@ import { linkParticipante, plural } from '../lib/util.js';
 import { varsVisual, varsEtiqueta } from '../lib/visual.js';
 import { Assinatura, Carregando, MarcaCliente, QR } from './comum.js';
 import { Cronometro, useDesvio, useRestante, envioAberto } from '../lib/cronometro.js';
-import { Postits, Nuvem, PorEtiqueta, Prioridades } from './resultados.js';
+import { Postits, Nuvem, PorEtiqueta, Prioridades, ResumoNumeros, ResumoPrioridades } from './resultados.js';
 
 const MAX_CARTOES = 60;
 
@@ -53,7 +53,7 @@ export function Telao({ codigo, chave }) {
   const abertoAgora = dados?.sessao ? envioAberto(dados.sessao, restante) : false;
   const restanteVoto = useRestante(dados?.sessao?.votacao_aberta ? dados.sessao.votacao_prazo : null, desvio);
   useCaber(mural, dados
-    ? [dados.respostas?.map((r) => r.id + r.texto).join('|'), dados.sessao?.atividade_foco, abertoAgora, dados.sessao?.visualizacao, dados.sessao?.resultado_visivel, (dados.top || []).map((t) => t.id + t.votos).join()].join('#')
+    ? [dados.respostas?.map((r) => r.id + r.texto).join('|'), dados.sessao?.atividade_foco, abertoAgora, dados.sessao?.visualizacao, dados.sessao?.resultado_visivel, (dados.top || []).map((t) => t.id + t.votos).join(), dados.sessao?.resumo_visivel, dados.sessao?.resumo_visao, JSON.stringify(dados.resumo || '')].join('#')
     : '');
 
   if (dados === undefined) {
@@ -70,6 +70,7 @@ export function Telao({ codigo, chave }) {
   const { sessao, atividades, etiquetas, respostas, conectados, total_respostas, votantes = 0 } = dados;
   const votando = Boolean(sessao.votacao_aberta && sessao.atividade_foco && restanteVoto !== 0);
   const revelado = Boolean(sessao.resultado_visivel && sessao.atividade_foco);
+  const resumoNaTela = Boolean(sessao.resumo_visivel && dados.resumo);
   const foco = atividades.find((a) => a.id === sessao.atividade_foco);
   const link = linkParticipante(sessao.codigo);
   const etq = new Map(etiquetas.map((e) => [e.id, e]));
@@ -81,15 +82,25 @@ export function Telao({ codigo, chave }) {
     <header class="telao-topo">
       <${MarcaCliente} sessao=${sessao} classe="telao-marca" />
       <div class="telao-contadores">
-        ${foco && !votando && !sessao.votacao_aberta ? html`<${Cronometro} restante=${restante} classe="cronometro-telao" />` : null}
+        ${foco && !votando && !sessao.votacao_aberta && !resumoNaTela ? html`<${Cronometro} restante=${restante} classe="cronometro-telao" />` : null}
         ${sessao.votacao_aberta ? html`<${Cronometro} restante=${restanteVoto} classe="cronometro-telao" alerta=${15} />` : null}
         ${votando ? html`<div class="telao-votantes"><strong>${votantes}</strong><span>${votantes === 1 ? 'votou' : 'votaram'}</span></div>` : null}
         <div><strong>${conectados}</strong><span>${conectados === 1 ? 'conectada' : 'conectadas'}</span></div>
-        <div><strong>${foco ? respostas.length : total_respostas}</strong><span>${(foco ? respostas.length : total_respostas) === 1 ? 'resposta' : 'respostas'}</span></div>
+        <div><strong>${foco && !resumoNaTela ? respostas.length : total_respostas}</strong><span>${(foco && !resumoNaTela ? respostas.length : total_respostas) === 1 ? 'resposta' : 'respostas'}</span></div>
       </div>
     </header>
 
-    ${!foco
+    ${resumoNaTela
+      ? html`<section class="telao-ativo">
+          <div class="telao-pergunta">
+            <div class="telao-rotulo">Resumo da dinâmica <span class="estado estado-aberto">${sessao.resumo_visao === 'prioridades' ? 'Só as priorizadas' : 'Em números'}</span></div>
+            <h1>${sessao.nome}</h1>
+          </div>
+          ${sessao.resumo_visao === 'prioridades'
+            ? html`<${ResumoPrioridades} resumo=${dados.resumo} etiquetas=${etiquetas} atividades=${atividades} rotulo=${sessao.rotulo_atividade} caixa=${mural} />`
+            : html`<${ResumoNumeros} resumo=${dados.resumo} etiquetas=${etiquetas} atividades=${atividades} rotulo=${sessao.rotulo_atividade} caixa=${mural} />`}
+        </section>`
+      : !foco
       ? html`<section class="telao-lobby">
           <div class="telao-lobby-texto">
             <div class="telao-rotulo">${sessao.cliente}</div>
@@ -136,7 +147,7 @@ export function Telao({ codigo, chave }) {
 
     <footer class="telao-rodape">
       <${Assinatura} classe="assinatura-telao" />
-      ${foco ? html`<div class="telao-qr-canto">
+      ${foco && !resumoNaTela ? html`<div class="telao-qr-canto">
         <div class="telao-qr-texto"><strong>Entre pelo celular</strong><span>aponte a câmera</span></div>
         <${QR} texto=${link} tamanho=${120} escura=${sessao.visual?.escura || '#131313'} />
       </div>` : null}

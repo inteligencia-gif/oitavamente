@@ -124,3 +124,71 @@ export function Prioridades({ top, etiquetas, caixa }) {
     })}
   </div>`;
 }
+
+// ---------- Resumo geral da dinâmica ----------
+const pct = (n, total) => (total ? Math.round((n / total) * 100) : 0);
+
+export function ResumoNumeros({ resumo, etiquetas, atividades, rotulo, caixa }) {
+  const etq = new Map(etiquetas.map((e) => [e.id, e]));
+  const atv = new Map(atividades.map((a) => [a.id, a]));
+  const priorizadas = resumo.por_atividade.reduce((s, a) => s + a.top.length, 0);
+  const maxAtv = Math.max(1, ...resumo.por_atividade.map((a) => a.n));
+  const destaques = [
+    { n: resumo.respostas, rotulo: resumo.respostas === 1 ? 'resposta' : 'respostas' },
+    { n: resumo.pessoas, rotulo: resumo.pessoas === 1 ? 'pessoa participou' : 'pessoas participaram' },
+    { n: resumo.votos, rotulo: resumo.votos === 1 ? 'voto' : 'votos' },
+    { n: priorizadas, rotulo: priorizadas === 1 ? 'ideia priorizada' : 'ideias priorizadas' },
+  ];
+  return html`<div ref=${caixa} class="resumo">
+    <div class="resumo-destaques">
+      ${destaques.map((d, i) => html`<div key=${i} class="resumo-numero" style=${{ animationDelay: `${i * 0.12}s` }}>
+        <strong>${d.n}</strong><span>${d.rotulo}</span></div>`)}
+    </div>
+    <div class="resumo-colunas">
+      ${resumo.por_etiqueta.length ? html`<section class="resumo-bloco">
+        <h2>Por etiqueta</h2>
+        ${resumo.por_etiqueta.map((x) => {
+          const e = etq.get(x.etiqueta_id);
+          const p = pct(x.n, resumo.respostas);
+          return html`<div key=${x.etiqueta_id} class="barra-linha" style=${varsEtiqueta(e?.cor)}>
+            <div class="barra-rotulo"><span><i class="ponto"></i>${e?.nome || '—'}</span><b>${p}% · ${x.n}</b></div>
+            <div class="barra"><i style=${{ width: `${p}%` }}></i></div>
+          </div>`;
+        })}
+      </section>` : null}
+      <section class="resumo-bloco">
+        <h2>Respostas por ${rotulo.toLowerCase()}</h2>
+        ${resumo.por_atividade.map((x) => {
+          const a = atv.get(x.atividade_id);
+          return html`<div key=${x.atividade_id} class="barra-linha compacta">
+            <div class="barra-rotulo"><span><em>${a?.ordem}</em>${a?.titulo}</span><b>${x.n}</b></div>
+            <div class="barra"><i style=${{ width: `${(x.n / maxAtv) * 100}%` }}></i></div>
+          </div>`;
+        })}
+      </section>
+    </div>
+  </div>`;
+}
+
+export function ResumoPrioridades({ resumo, etiquetas, atividades, rotulo, caixa }) {
+  const etq = new Map(etiquetas.map((e) => [e.id, e]));
+  const atv = new Map(atividades.map((a) => [a.id, a]));
+  const grupos = resumo.por_atividade.filter((x) => x.n > 0);
+  if (!grupos.length) return html`<div ref=${caixa} class="mural-vazio">Ainda não há respostas nesta sessão.</div>`;
+  // poucas perguntas: letra maior (o ajuste automático diminui se não couber)
+  return html`<div ref=${caixa} class="resumo-prioridades" style=${{ '--colunas': Math.min(4, Math.max(1, grupos.length)), '--base': grupos.length <= 3 ? '1.35em' : '1em' }}>
+    ${grupos.map((x) => {
+      const a = atv.get(x.atividade_id);
+      return html`<section key=${x.atividade_id} class="resumo-pergunta">
+        <h2><em>${rotulo} ${a?.ordem}</em>${a?.titulo}</h2>
+        ${x.top.length
+          ? html`<ol>${x.top.slice(0, 5).map((t) => {
+              const e = etq.get(t.etiqueta_id);
+              return html`<li key=${t.id} style=${{ '--postit': e?.cor || CORES_ETIQUETA[0] }}>
+                <span class="resumo-pos">${t.posicao}º</span><p>${t.texto}</p><small>${t.votos} ${t.votos === 1 ? 'voto' : 'votos'}</small></li>`;
+            })}</ol>${x.top.length > 5 ? html`<p class="resumo-sem-voto">+${x.top.length - 5} empatadas</p>` : null}`
+          : html`<p class="resumo-sem-voto">${x.n} ${x.n === 1 ? 'resposta' : 'respostas'}, sem votação</p>`}
+      </section>`;
+    })}
+  </div>`;
+}

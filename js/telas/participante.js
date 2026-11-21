@@ -53,7 +53,8 @@ export function Participante({ codigo }) {
 
   const { sessao, atividades, etiquetas, minhas } = dados;
   const foco = atividades.find((a) => a.id === sessao.atividade_foco);
-  const encerrada = sessao.status === 'encerrada';
+  // sessão encerrada ou resumo geral no telão: o celular agradece e encerra
+  const encerrada = sessao.status === 'encerrada' || Boolean(sessao.resumo_visivel);
 
   return html`<main class="tema participante" style=${varsVisual(sessao.visual)}>
     <header class="participante-topo">

@@ -156,6 +156,8 @@ function Conduzir({ dados, acao }) {
     atualizar({ [campo]: new Date(novo).toISOString() }, '+1 minuto.');
   };
   const minutos = Math.round((sessao.tempo_resposta_seg ?? 480) / 60);
+  const resumoNaTela = Boolean(sessao.resumo_visivel);
+  const mostrarResumo = () => atualizar({ resumo_visivel: true, resumo_visao: sessao.resumo_visao || 'numeros' }, 'Resumo geral no telão.');
   const focar = (a) => atualizar({
     atividade_foco: a.id, envio_aberto: true,
     status: sessao.status === 'rascunho' || sessao.status === 'encerrada' ? 'ao_vivo' : sessao.status,
@@ -166,7 +168,10 @@ function Conduzir({ dados, acao }) {
       <div class="ao-vivo-topo">
         <div class="ao-vivo-estado">
           <span class="rotulo-campo">No telão agora</span>
-          ${foco
+          ${resumoNaTela
+            ? html`<strong>Resumo geral da dinâmica</strong>
+                <div class="ao-vivo-linha"><span class="estado estado-aberto">${sessao.resumo_visao === 'prioridades' ? 'Só as priorizadas' : 'Em números'}</span></div>`
+            : foco
             ? html`<strong>${rotulo} ${foco.ordem}: ${foco.titulo}</strong>
                 <div class="ao-vivo-linha">
                   <span class=${`estado ${sessao.envio_aberto || sessao.votacao_aberta || sessao.resultado_visivel ? 'estado-aberto' : 'estado-fechado'}`}>
@@ -180,6 +185,7 @@ function Conduzir({ dados, acao }) {
             : html`<strong>${sessao.status === 'encerrada' ? 'Sessão encerrada' : 'Tela de entrada (QR code)'}</strong>`}
         </div>
         <div class="ao-vivo-secundarias">
+          ${!resumoNaTela && sessao.status !== 'rascunho' ? html`<button class="btn btn-fantasma btn-pequeno" onClick=${mostrarResumo}>Resumo geral</button>` : null}
           ${foco ? html`<button class="btn btn-fantasma btn-pequeno" title="Volta o telão para a tela de entrada com o QR code"
               onClick=${() => atualizar({ atividade_foco: null, envio_aberto: false, votacao_aberta: false, resultado_visivel: false }, 'Telão na tela de entrada.')}>Mostrar QR code</button>` : null}
           ${sessao.status === 'ao_vivo' ? html`<button class="btn btn-fantasma btn-pequeno perigo" onClick=${() => {
@@ -194,15 +200,16 @@ function Conduzir({ dados, acao }) {
         <div class="ao-vivo-grupo">
           <span class="rotulo-campo">Rodada</span>
           <div class="acoes">
-            ${foco ? html`<button class="btn btn-escuro"
+            ${foco && !resumoNaTela ? html`<button class="btn btn-escuro"
                 onClick=${() => atualizar({ envio_aberto: !sessao.envio_aberto }, sessao.envio_aberto ? 'Envio fechado.' : 'Envio reaberto.')}>
                 ${sessao.envio_aberto ? 'Fechar envio' : minutos > 0 ? `Reabrir envio (${minutos} min)` : 'Reabrir envio'}</button>` : null}
             ${proxima ? html`<button class="btn btn-primario" onClick=${() => focar(proxima)}>
                 ${foco ? `Próxima: ${rotulo.toLowerCase()} ${proxima.ordem}` : `Começar: ${rotulo.toLowerCase()} 1`} →</button>` : null}
-            ${foco && !proxima ? html`<span class="suave ao-vivo-fim">Última ${rotulo.toLowerCase()} do roteiro</span>` : null}
+            ${foco && !proxima && !resumoNaTela ? html`<button class="btn btn-primario" onClick=${mostrarResumo}>Ver resumo geral →</button>` : null}
+            ${resumoNaTela && foco ? html`<button class="btn btn-fantasma" onClick=${() => atualizar({ resumo_visivel: false }, 'Telão de volta à problemática.')}>Voltar à ${rotulo.toLowerCase()} ${foco.ordem}</button>` : null}
           </div>
         </div>
-        ${foco && !sessao.envio_aberto ? html`<div class="ao-vivo-grupo">
+        ${foco && !sessao.envio_aberto && !resumoNaTela ? html`<div class="ao-vivo-grupo">
           <span class="rotulo-campo">Votação</span>
           <div class="acoes">
             <button class=${`btn ${sessao.votacao_aberta ? 'btn-escuro' : 'btn-fantasma'}`}
@@ -214,7 +221,14 @@ function Conduzir({ dados, acao }) {
           </div>
         </div>` : null}
       </div>
-      ${foco ? html`<div class="ao-vivo-visao">
+      ${resumoNaTela ? html`<div class="ao-vivo-visao">
+        <span class="rotulo-campo">O telão está mostrando</span>
+        <div class="segmentos" role="radiogroup" aria-label="Visão do resumo no telão">
+          ${[['numeros', 'Em números'], ['prioridades', 'Só as priorizadas']].map(([id, nome]) => html`<button key=${id} role="radio"
+            aria-checked=${(sessao.resumo_visao || 'numeros') === id} class=${(sessao.resumo_visao || 'numeros') === id ? 'ativo' : ''}
+            onClick=${() => atualizar({ resumo_visao: id }, `Resumo: ${nome.toLowerCase()}.`)}>${nome}</button>`)}
+        </div>
+      </div>` : foco ? html`<div class="ao-vivo-visao">
         <span class="rotulo-campo">${sessao.envio_aberto ? 'Quando o envio fechar, o telão mostra' : 'O telão está mostrando'}</span>
         <div class="segmentos" role="radiogroup" aria-label="Visualização das respostas no telão">
           ${VISUALIZACOES.map((v) => html`<button key=${v.id} role="radio" aria-checked=${(sessao.visualizacao || 'postits') === v.id}

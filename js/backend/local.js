@@ -36,7 +36,7 @@ function gravar(db) {
 const agora = () => new Date().toISOString();
 const espera = () => new Promise((r) => setTimeout(r, 60)); // simula rede
 
-const PUBLICOS = ['id', 'nome', 'cliente', 'codigo', 'visual', 'status', 'atividade_foco', 'envio_aberto', 'envio_prazo', 'tempo_resposta_seg', 'visualizacao', 'votacao_aberta', 'votacao_prazo', 'tempo_votacao_seg', 'resultado_visivel', 'limite_caracteres', 'rotulo_atividade'];
+const PUBLICOS = ['id', 'nome', 'cliente', 'codigo', 'visual', 'status', 'atividade_foco', 'envio_aberto', 'envio_prazo', 'tempo_resposta_seg', 'visualizacao', 'votacao_aberta', 'votacao_prazo', 'tempo_votacao_seg', 'resultado_visivel', 'resumo_visivel', 'resumo_visao', 'limite_caracteres', 'rotulo_atividade'];
 export const MAX_VOTOS = 3;
 const TEMPO_PADRAO = 480; // 8 minutos
 // passou do prazo e da tolerância de quem ainda estava escrevendo
@@ -49,16 +49,37 @@ const resultadoAtivo = (db, s) => Boolean(s.resultado_visivel
 const publicaDe = (db, s) => ({ ...Object.fromEntries(PUBLICOS.map((k) => [k, s[k]])), resultado_visivel: resultadoAtivo(db, s) });
 
 // As mais votadas da pergunta em foco: posição 1 a 3, com empates (1, 2, 2, 4…).
-function topPrioridades(db, s) {
-  const validas = db.respostas.filter((r) => r.atividade_id === s.atividade_foco && r.visivel && r.teste === s.modo_teste);
+function topPrioridades(db, s, atividadeId = s.atividade_foco) {
+  const validas = db.respostas.filter((r) => r.atividade_id === atividadeId && r.visivel && r.teste === s.modo_teste);
   const n = new Map();
-  db.votos.forEach((v) => { if (v.atividade_id === s.atividade_foco) n.set(v.resposta_id, (n.get(v.resposta_id) || 0) + 1); });
+  db.votos.forEach((v) => { if (v.atividade_id === atividadeId) n.set(v.resposta_id, (n.get(v.resposta_id) || 0) + 1); });
   const votadas = validas.filter((r) => n.get(r.id)).sort((a, b) => n.get(b.id) - n.get(a.id) || a.texto.localeCompare(b.texto, 'pt-BR'));
   return votadas
     .map((r) => ({ id: r.id, texto: r.texto, etiqueta_id: r.etiqueta_id, votos: n.get(r.id), posicao: votadas.filter((x) => n.get(x.id) > n.get(r.id)).length + 1 }))
     .filter((r) => r.posicao <= 3);
 }
 const porOrdem = (a, b) => a.ordem - b.ordem;
+
+// Números da sessão para o resumo geral (sem ensaio fora do ensaio, sem respostas ocultas).
+function resumo(db, s) {
+  const r = db.respostas.filter((x) => x.sessao_id === s.id && x.visivel && x.teste === s.modo_teste);
+  const ids = new Set(r.map((x) => x.id));
+  const v = db.votos.filter((x) => ids.has(x.resposta_id));
+  return {
+    respostas: r.length,
+    pessoas: new Set([...r.map((x) => x.participante_id), ...v.map((x) => x.participante_id)]).size,
+    votos: v.length,
+    votantes: new Set(v.map((x) => x.participante_id)).size,
+    por_etiqueta: db.etiquetas.filter((e) => e.sessao_id === s.id).sort(porOrdem)
+      .map((e) => ({ etiqueta_id: e.id, n: r.filter((x) => x.etiqueta_id === e.id).length })),
+    por_atividade: db.atividades.filter((a) => a.sessao_id === s.id).sort(porOrdem).map((a) => ({
+      atividade_id: a.id,
+      n: r.filter((x) => x.atividade_id === a.id).length,
+      votos: v.filter((x) => x.atividade_id === a.id).length,
+      top: topPrioridades(db, s, a.id),
+    })),
+  };
+}
 const conectados = (db, sessaoId) => {
   const limite = Date.now() - ONLINE_MS;
   return db.participantes.filter((p) => p.sessao_id === sessaoId && Date.parse(p.visto_em) > limite).length;
@@ -87,6 +108,8 @@ function novaSessao(db, dados) {
     votacao_prazo: null,
     tempo_votacao_seg: 60, // 1 minuto para votar
     resultado_visivel: false, // as 3 mais votadas no telão e nos celulares
+    resumo_visivel: false, // resumo geral da dinâmica no telão
+    resumo_visao: 'numeros', // 'numeros' ou 'prioridades'
     limite_caracteres: 200,
     rotulo_atividade: m.rotulo_atividade,
     criado_em: agora(),
@@ -226,6 +249,7 @@ export const backend = {
       // só quantas pessoas votaram: o resultado fica no painel
       votantes: new Set(db.votos.filter((v) => v.atividade_id === s.atividade_foco).map((v) => v.participante_id)).size,
       top: resultadoAtivo(db, s) ? topPrioridades(db, s) : [],
+      resumo: s.resumo_visivel ? resumo(db, s) : null,
     };
   },
 
@@ -288,10 +312,13 @@ export const backend = {
     if (patch.votacao_aberta) s.envio_aberto = false;
     else if ((s.envio_aberto && !antes.envio_aberto) || antes.atividade_foco !== s.atividade_foco) s.votacao_aberta = false;
     // revelar o resultado encerra a votação; trocar de pergunta, abrir envio ou votação esconde de novo
+    // resumo geral: mostrar fecha envio e votação; abrir envio, votação ou trocar de pergunta esconde
+    if (patch.resumo_visivel) { s.envio_aberto = false; s.votacao_aberta = false; s.resultado_visivel = false; }
+    else if (antes.atividade_foco !== s.atividade_foco || (s.envio_aberto && !antes.envio_aberto) || (s.votacao_aberta && !antes.votacao_aberta)) s.resumo_visivel = false;
     if (patch.resultado_visivel) { s.votacao_aberta = false; s.envio_aberto = false; }
     else if (antes.atividade_foco !== s.atividade_foco || (s.envio_aberto && !antes.envio_aberto) || (s.votacao_aberta && !antes.votacao_aberta)) s.resultado_visivel = false;
     // fim da votação na mesma pergunta (pelo tempo ou pelo botão): o top 3 aparece sozinho
-    else if (antes.votacao_aberta && !s.votacao_aberta && patch.resultado_visivel === undefined && temVotos(db, s)) s.resultado_visivel = true;
+    else if (antes.votacao_aberta && !s.votacao_aberta && patch.resultado_visivel === undefined && !s.resumo_visivel && temVotos(db, s)) s.resultado_visivel = true;
     // cronômetro da votação: começa ao abrir, zera ao fechar
     if (!s.votacao_aberta) s.votacao_prazo = null;
     else if (!antes.votacao_aberta) {

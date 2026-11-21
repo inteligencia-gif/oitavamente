@@ -56,6 +56,7 @@ Já vem uma sessão pronta com o código **COOP11**.
    **Votação:** com o envio fechado, "Abrir votação" leva todas as respostas da pergunta para os celulares. Cada pessoa escolhe até 3 prioridades e pode mudar até a votação fechar. A votação tem 1 minuto por padrão (ajustável em Configurar; 0 desliga), com "+1 min" no painel, e fecha sozinha ao zerar.
    O telão mostra só quantas pessoas votaram. O ranking aparece apenas no painel (ordem "Mais votadas") e na planilha.
    Quando a votação acaba (pelo tempo ou por "Encerrar votação"), as 3 mais votadas aparecem sozinhas no telão e nos celulares (empates no 3º lugar aparecem todos). O painel pode esconder com "Esconder o top 3". O ranking completo continua só no painel.
+   **Resumo geral:** na última problemática, "Ver resumo geral →" leva o telão para o resumo da dinâmica, com duas visões: **Em números** (respostas, pessoas, votos, ideias priorizadas, por etiqueta e por problemática) e **Só as priorizadas** (top 3 de cada problemática). Os celulares mostram "A dinâmica terminou".
 4. **Depois:** clique em "Exportar planilha", que gera as abas Respostas (com votos), Prioridades e Resumo.
 
 ## Fora do MVP (v2)
