@@ -158,6 +158,50 @@ function Conduzir({ dados, acao }) {
   const minutos = Math.round((sessao.tempo_resposta_seg ?? 480) / 60);
   const resumoNaTela = Boolean(sessao.resumo_visivel);
   const mostrarResumo = () => atualizar({ resumo_visivel: true, resumo_visao: sessao.resumo_visao || 'numeros' }, 'Resumo geral no telão.');
+
+  // ---- Fluxo da rodada em etapas: Respostas → Votação → Top 3 → Próxima ----
+  const minVoto = Math.round((sessao.tempo_votacao_seg ?? 60) / 60);
+  const nRespostasFoco = foco ? daRodada.filter((r) => r.atividade_id === foco.id).length : 0;
+  const votou = votantesFoco > 0;
+  const etapaAtual = !foco || resumoNaTela ? null
+    : sessao.votacao_aberta ? 'votacao'
+    : sessao.resultado_visivel ? 'top3'
+    : votou ? 'votado'
+    : 'respostas';
+  const etapas = [
+    { id: 'respostas', nome: 'Respostas', estado: sessao.envio_aberto ? 'ativa' : 'feita', info: plural(nRespostasFoco, 'resposta', 'respostas') },
+    { id: 'votacao', nome: 'Votação', estado: sessao.votacao_aberta ? 'ativa' : votou ? 'feita' : 'pendente', info: votou || sessao.votacao_aberta ? plural(votantesFoco, 'pessoa votou', 'pessoas votaram') : null },
+    { id: 'top3', nome: 'Top 3 no telão', estado: sessao.resultado_visivel ? 'ativa' : 'pendente' },
+    { id: 'proxima', nome: proxima ? 'Próxima' : 'Resumo geral', estado: 'pendente' },
+  ];
+  const irProxima = proxima
+    ? { texto: `Próxima: ${rotulo.toLowerCase()} ${proxima.ordem} →`, fazer: () => focar(proxima) }
+    : { texto: 'Ver resumo geral →', fazer: mostrarResumo };
+  const reabrirEnvio = { texto: minutos > 0 ? `Reabrir respostas (${minutos} min)` : 'Reabrir respostas', fazer: () => atualizar({ envio_aberto: true }, 'Respostas reabertas.') };
+  const abrirVotacao = { texto: minVoto > 0 ? `Abrir votação (${minVoto} min)` : 'Abrir votação', fazer: () => atualizar({ votacao_aberta: true }, 'Votação aberta nos celulares.') };
+  let principal = null;
+  let secundarias = [];
+  let cronometroAtivo = null;
+  if (resumoNaTela) {
+    secundarias = foco ? [{ texto: `Voltar à ${rotulo.toLowerCase()} ${foco.ordem}`, fazer: () => atualizar({ resumo_visivel: false }, 'Telão de volta à problemática.') }] : [];
+  } else if (!foco) {
+    principal = proxima ? { texto: `Começar: ${rotulo.toLowerCase()} 1 →`, fazer: () => focar(proxima) } : null;
+  } else if (sessao.envio_aberto) {
+    principal = { texto: 'Encerrar respostas', classe: 'btn-escuro', fazer: () => atualizar({ envio_aberto: false }, 'Respostas encerradas.') };
+    cronometroAtivo = html`<span class="ao-vivo-tempo"><${Cronometro} restante=${restante} />${restante > 0 ? html`<button class="link-acao" onClick=${maisUmMinuto}>+1 min</button>` : null}</span>`;
+  } else if (sessao.votacao_aberta) {
+    principal = { texto: 'Encerrar votação e mostrar top 3', classe: 'btn-escuro', fazer: () => atualizar({ votacao_aberta: false }, 'Votação encerrada.') };
+    cronometroAtivo = html`<span class="ao-vivo-tempo"><${Cronometro} restante=${restanteVoto} alerta=${15} />${restanteVoto > 0 ? html`<button class="link-acao" onClick=${maisUmMinuto}>+1 min</button>` : null}</span>`;
+  } else if (sessao.resultado_visivel) {
+    principal = irProxima;
+    secundarias = [{ texto: 'Esconder o top 3', fazer: () => atualizar({ resultado_visivel: false }, 'Top 3 escondido.') }, { texto: 'Reabrir votação', fazer: abrirVotacao.fazer }, reabrirEnvio];
+  } else if (votou) {
+    principal = { texto: 'Mostrar o top 3', fazer: () => atualizar({ resultado_visivel: true }, 'Top 3 no telão.') };
+    secundarias = [{ texto: irProxima.texto.replace(' →', ''), fazer: irProxima.fazer }, { texto: 'Reabrir votação', fazer: abrirVotacao.fazer }, reabrirEnvio];
+  } else {
+    principal = abrirVotacao;
+    secundarias = [{ texto: proxima ? `Pular votação e ir para a ${rotulo.toLowerCase()} ${proxima.ordem}` : 'Pular votação e ver o resumo', fazer: irProxima.fazer }, reabrirEnvio];
+  }
   const focar = (a) => atualizar({
     atividade_foco: a.id, envio_aberto: true,
     status: sessao.status === 'rascunho' || sessao.status === 'encerrada' ? 'ao_vivo' : sessao.status,
@@ -167,28 +211,14 @@ function Conduzir({ dados, acao }) {
     <section class="cartao ao-vivo">
       <div class="ao-vivo-topo">
         <div class="ao-vivo-estado">
-          <span class="rotulo-campo">No telão agora</span>
-          ${resumoNaTela
-            ? html`<strong>Resumo geral da dinâmica</strong>
-                <div class="ao-vivo-linha"><span class="estado estado-aberto">${sessao.resumo_visao === 'prioridades' ? 'Só as priorizadas' : 'Em números'}</span></div>`
-            : foco
-            ? html`<strong>${rotulo} ${foco.ordem}: ${foco.titulo}</strong>
-                <div class="ao-vivo-linha">
-                  <span class=${`estado ${sessao.envio_aberto || sessao.votacao_aberta || sessao.resultado_visivel ? 'estado-aberto' : 'estado-fechado'}`}>
-                    ${sessao.envio_aberto ? 'Envio aberto' : sessao.votacao_aberta ? 'Votação aberta' : sessao.resultado_visivel ? 'Top 3 na tela' : 'Envio fechado'}</span>
-                  ${sessao.votacao_aberta || votantesFoco ? html`<span class="suave votantes">${plural(votantesFoco, 'pessoa votou', 'pessoas votaram')}</span>` : null}
-                  ${sessao.envio_aberto ? html`<${Cronometro} restante=${restante} />` : null}
-                  ${sessao.envio_aberto && restante > 0 ? html`<button class="btn btn-fantasma btn-pequeno" onClick=${maisUmMinuto}>+1 min</button>` : null}
-                  ${sessao.votacao_aberta ? html`<${Cronometro} restante=${restanteVoto} alerta=${15} />` : null}
-                  ${sessao.votacao_aberta && restanteVoto > 0 ? html`<button class="btn btn-fantasma btn-pequeno" onClick=${maisUmMinuto}>+1 min</button>` : null}
-                </div>`
-            : html`<strong>${sessao.status === 'encerrada' ? 'Sessão encerrada' : 'Tela de entrada (QR code)'}</strong>`}
+          <span class="rotulo-campo">${resumoNaTela ? 'No telão agora' : foco ? `${rotulo} ${foco.ordem} de ${atividades.length}` : 'No telão agora'}</span>
+          <strong>${resumoNaTela ? 'Resumo geral da dinâmica' : foco ? foco.titulo : sessao.status === 'encerrada' ? 'Sessão encerrada' : 'Tela de entrada com o QR code'}</strong>
         </div>
         <div class="ao-vivo-secundarias">
-          ${!resumoNaTela && sessao.status !== 'rascunho' ? html`<button class="btn btn-fantasma btn-pequeno" onClick=${mostrarResumo}>Resumo geral</button>` : null}
-          ${foco ? html`<button class="btn btn-fantasma btn-pequeno" title="Volta o telão para a tela de entrada com o QR code"
+          ${!resumoNaTela && sessao.status !== 'rascunho' ? html`<button class="link-acao" onClick=${mostrarResumo}>Resumo geral</button>` : null}
+          ${foco ? html`<button class="link-acao" title="Volta o telão para a tela de entrada com o QR code"
               onClick=${() => atualizar({ atividade_foco: null, envio_aberto: false, votacao_aberta: false, resultado_visivel: false }, 'Telão na tela de entrada.')}>Mostrar QR code</button>` : null}
-          ${sessao.status === 'ao_vivo' ? html`<button class="btn btn-fantasma btn-pequeno perigo" onClick=${() => {
+          ${sessao.status === 'ao_vivo' ? html`<button class="link-acao perigo" onClick=${() => {
             if (confirm('Encerrar a sessão? Os participantes verão a mensagem de encerramento.')) {
               atualizar({ status: 'encerrada', envio_aberto: false, votacao_aberta: false, atividade_foco: null }, 'Sessão encerrada.');
             }
@@ -196,31 +226,22 @@ function Conduzir({ dados, acao }) {
         </div>
       </div>
 
-      <div class="ao-vivo-fluxo">
-        <div class="ao-vivo-grupo">
-          <span class="rotulo-campo">Rodada</span>
-          <div class="acoes">
-            ${foco && !resumoNaTela ? html`<button class="btn btn-escuro"
-                onClick=${() => atualizar({ envio_aberto: !sessao.envio_aberto }, sessao.envio_aberto ? 'Envio fechado.' : 'Envio reaberto.')}>
-                ${sessao.envio_aberto ? 'Fechar envio' : minutos > 0 ? `Reabrir envio (${minutos} min)` : 'Reabrir envio'}</button>` : null}
-            ${proxima ? html`<button class="btn btn-primario" onClick=${() => focar(proxima)}>
-                ${foco ? `Próxima: ${rotulo.toLowerCase()} ${proxima.ordem}` : `Começar: ${rotulo.toLowerCase()} 1`} →</button>` : null}
-            ${foco && !proxima && !resumoNaTela ? html`<button class="btn btn-primario" onClick=${mostrarResumo}>Ver resumo geral →</button>` : null}
-            ${resumoNaTela && foco ? html`<button class="btn btn-fantasma" onClick=${() => atualizar({ resumo_visivel: false }, 'Telão de volta à problemática.')}>Voltar à ${rotulo.toLowerCase()} ${foco.ordem}</button>` : null}
-          </div>
+      ${foco && !resumoNaTela ? html`<ol class="etapas" aria-label="Etapas da ${rotulo.toLowerCase()}">
+        ${etapas.map((e, n) => html`<li key=${e.id} class=${`etapa ${e.estado}`}>
+          <span class="etapa-marca">${e.estado === 'feita' ? '✓' : n + 1}</span>
+          <span class="etapa-nome">${e.nome}</span>
+          ${e.info ? html`<span class="etapa-info">${e.info}</span>` : null}
+        </li>`)}
+      </ol>` : null}
+
+      <div class="ao-vivo-acao">
+        ${principal ? html`<button class=${`btn btn-grande-painel ${principal.classe || 'btn-primario'}`} onClick=${principal.fazer}>${principal.texto}</button>` : null}
+        ${cronometroAtivo}
+        <div class="ao-vivo-links">
+          ${secundarias.map((a) => html`<button key=${a.texto} class="link-acao" onClick=${a.fazer}>${a.texto}</button>`)}
         </div>
-        ${foco && !sessao.envio_aberto && !resumoNaTela ? html`<div class="ao-vivo-grupo">
-          <span class="rotulo-campo">Votação</span>
-          <div class="acoes">
-            <button class=${`btn ${sessao.votacao_aberta ? 'btn-escuro' : 'btn-fantasma'}`}
-              onClick=${() => atualizar({ votacao_aberta: !sessao.votacao_aberta }, sessao.votacao_aberta ? 'Votação encerrada.' : 'Votação aberta nos celulares.')}>
-              ${sessao.votacao_aberta ? 'Encerrar votação' : (sessao.tempo_votacao_seg ?? 60) > 0 ? `Abrir votação (${Math.round((sessao.tempo_votacao_seg ?? 60) / 60)} min)` : 'Abrir votação'}</button>
-            ${!sessao.votacao_aberta && votantesFoco > 0 ? html`<button class="btn btn-fantasma"
-                onClick=${() => atualizar({ resultado_visivel: !sessao.resultado_visivel }, sessao.resultado_visivel ? 'Resultado escondido.' : 'As 3 mais votadas estão no telão e nos celulares.')}>
-                ${sessao.resultado_visivel ? 'Esconder o top 3' : 'Mostrar o top 3'}</button>` : null}
-          </div>
-        </div>` : null}
       </div>
+
       ${resumoNaTela ? html`<div class="ao-vivo-visao">
         <span class="rotulo-campo">O telão está mostrando</span>
         <div class="segmentos" role="radiogroup" aria-label="Visão do resumo no telão">
@@ -228,8 +249,8 @@ function Conduzir({ dados, acao }) {
             aria-checked=${(sessao.resumo_visao || 'numeros') === id} class=${(sessao.resumo_visao || 'numeros') === id ? 'ativo' : ''}
             onClick=${() => atualizar({ resumo_visao: id }, `Resumo: ${nome.toLowerCase()}.`)}>${nome}</button>`)}
         </div>
-      </div>` : foco ? html`<div class="ao-vivo-visao">
-        <span class="rotulo-campo">${sessao.envio_aberto ? 'Quando o envio fechar, o telão mostra' : 'O telão está mostrando'}</span>
+      </div>` : foco && etapaAtual === 'respostas' ? html`<div class="ao-vivo-visao">
+        <span class="rotulo-campo">${sessao.envio_aberto ? 'Quando fechar, as respostas aparecem como' : 'As respostas estão aparecendo como'}</span>
         <div class="segmentos" role="radiogroup" aria-label="Visualização das respostas no telão">
           ${VISUALIZACOES.map((v) => html`<button key=${v.id} role="radio" aria-checked=${(sessao.visualizacao || 'postits') === v.id}
             class=${(sessao.visualizacao || 'postits') === v.id ? 'ativo' : ''}

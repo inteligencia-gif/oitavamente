@@ -582,3 +582,26 @@ body[data-tela="s"] { background: #FFFFFF; }
 .resumo-pergunta li small { font-size: .72em; color: var(--oo-tinta-2); white-space: nowrap; }
 .resumo-pos { display: grid; place-items: center; min-width: 1.9em; height: 1.9em; border-radius: 999px; background: var(--oo-preto); color: var(--oo-amarelo); font-size: .8em; }
 .resumo-sem-voto { color: var(--oo-tinta-3); font-size: .9em; }
+
+/* ---------- Painel: fluxo em etapas ---------- */
+.ao-vivo-estado strong { font-size: 20px; font-weight: 600; line-height: 1.25; }
+.link-acao { background: none; border: 0; padding: 6px 8px; border-radius: 8px; font-size: 13px; color: var(--oo-tinta-2); text-decoration: underline; text-decoration-color: var(--oo-linha); text-underline-offset: 3px; }
+.link-acao:hover { color: var(--oo-preto); background: var(--oo-suave); text-decoration-color: currentColor; }
+.link-acao.perigo { color: var(--oo-alerta); }
+.etapas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.etapa { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--oo-suave); color: var(--oo-tinta-3); }
+.etapa-marca { grid-row: span 2; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #fff; font-size: 13px; box-shadow: var(--sombra-1); }
+.etapa-nome { font-size: 14px; }
+.etapa-info { font-size: 12px; }
+.etapa.feita { color: var(--oo-tinta-2); }
+.etapa.feita .etapa-marca { background: var(--oo-preto); color: #fff; box-shadow: none; }
+.etapa.ativa { background: var(--amarelo-suave); color: var(--oo-preto); box-shadow: inset 0 0 0 1.5px rgba(19, 19, 19, .8); }
+.etapa.ativa .etapa-marca { background: var(--oo-preto); color: var(--oo-amarelo); box-shadow: none; }
+.ao-vivo-acao { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.btn-grande-painel { min-height: 48px; padding: 0 24px; font-size: 15px; }
+.ao-vivo-tempo { display: inline-flex; align-items: center; gap: 4px; }
+.ao-vivo-links { display: flex; flex-wrap: wrap; gap: 2px; margin-left: auto; }
+@media (max-width: 900px) {
+  .etapas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ao-vivo-links { margin-left: 0; }
+}
