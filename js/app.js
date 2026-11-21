@@ -5,6 +5,7 @@ import { normalizarCodigo } from './lib/util.js';
 import { Participante } from './telas/participante.js';
 import { Telao } from './telas/telao.js';
 import { Painel } from './telas/painel.js';
+import { Relatorio } from './telas/relatorio.js';
 
 // Rotas por hash, para funcionar em qualquer hospedagem estática:
 //   #/              painel do facilitador (login)
@@ -12,6 +13,7 @@ import { Painel } from './telas/painel.js';
 //   #/telao/CODIGO?k=CHAVE   telão
 //   #/painel        painel do facilitador
 //   #/painel/ID     uma sessão no painel
+//   #/relatorio/ID  relatório da sessão para o cliente (PDF)
 function lerRota() {
   const bruto = location.hash.replace(/^#/, '') || '/';
   const [caminho, busca] = bruto.split('?');
@@ -36,6 +38,7 @@ function App() {
     const c = normalizarCodigo(b);
     return html`<${Telao} key=${c} codigo=${c} chave=${rota.q.get('k')} />`;
   }
+  if (a === 'relatorio' && b) return html`<${Relatorio} key=${b} id=${b} />`;
   // o endereço principal abre o painel (login); participantes entram só pelo QR code da sessão
   return html`<${Painel} sessaoId=${a === 'painel' ? b : undefined} />`;
 }

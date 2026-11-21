@@ -64,6 +64,7 @@ export function SessaoPainel({ id }) {
       <div class="acoes">
         <a class="btn btn-fantasma" href=${linkTelao(sessao.codigo, sessao.chave_telao)} target="_blank" rel="noopener">Abrir telão</a>
         <a class="btn btn-fantasma" href=${linkParticipante(sessao.codigo)} target="_blank" rel="noopener">Ver como participante</a>
+        <a class="btn btn-fantasma" href=${`#/relatorio/${sessao.id}`} target="_blank" rel="noopener">Relatório (PDF)</a>
         <button class="btn btn-escuro" onClick=${exportar}>${sessao.modo_teste ? 'Exportar ensaio' : 'Exportar planilha'}</button>
       </div>
     </div>

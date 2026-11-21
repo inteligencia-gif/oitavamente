@@ -1,6 +1,7 @@
-import { fmtDataHora, numerarParticipantes } from './util.js';
+import { fmtDataHora, fmtData, numerarParticipantes } from './util.js';
+import { montarRelatorio, pct } from './relatorio.js';
 
-// Planilha gerada no navegador: abas "Respostas", "Prioridades" (votação) e "Resumo".
+// Planilha gerada no navegador: abas "Visão geral", "Respostas", "Prioridades" (votação) e "Resumo".
 export async function exportarPlanilha({ sessao, atividades, etiquetas, respostas, votos = [] }, { incluirEnsaio = false } = {}) {
   const XLSX = await import('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm');
   const lista = respostas.filter((r) => incluirEnsaio || !r.teste);
@@ -60,7 +61,40 @@ export async function exportarPlanilha({ sessao, atividades, etiquetas, resposta
     });
   });
 
+  // Visão geral: números, etiquetas e o top 3 de cada pergunta (só respostas visíveis)
+  const rel = montarRelatorio({
+    sessao: { ...sessao, modo_teste: false }, atividades, etiquetas, votos,
+    respostas: lista.map((r) => ({ ...r, teste: false })),
+  });
+  const t = rel.totais;
+  const geral = [
+    ['Relatório da dinâmica'],
+    ['Sessão', sessao.nome],
+    ['Cliente', sessao.cliente || ''],
+    ['Data', sessao.data || sessao.criado_em ? fmtData(sessao.data || sessao.criado_em) : ''],
+    [],
+    ['Números'],
+    ['Respostas', t.respostas],
+    ['Pessoas que participaram', t.pessoas],
+    ['Votos de prioridade', t.votos],
+    ['Pessoas que votaram', t.votantes],
+    ['Ideias priorizadas (top 3)', t.priorizadas],
+    [`${rotulo}s`, t.atividades],
+  ];
+  if (rel.porEtiqueta.length) {
+    geral.push([], ['Respostas por etiqueta'], ['Etiqueta', 'Respostas', '%']);
+    rel.porEtiqueta.forEach(({ etiqueta, n }) => geral.push([etiqueta.nome, n, `${pct(n, t.respostas)}%`]));
+  }
+  geral.push([], [`Top 3 de cada ${rotulo.toLowerCase()}`], [`Nº`, rotulo, 'Posição', 'Resposta', 'Etiqueta', 'Votos']);
+  rel.porAtividade.forEach((x) => {
+    if (!x.top.length) geral.push([x.atividade.ordem, x.atividade.titulo, '', x.respostas.length ? 'Sem votação' : 'Sem respostas', '', '']);
+    x.top.forEach((r) => geral.push([x.atividade.ordem, x.atividade.titulo, `${r.posicao}º`, r.texto, r.etiqueta?.nome || '', r.votos]));
+  });
+
   const wb = XLSX.utils.book_new();
+  const wg = XLSX.utils.aoa_to_sheet(geral);
+  wg['!cols'] = [{ wch: 26 }, { wch: 40 }, { wch: 9 }, { wch: 70 }, { wch: 16 }, { wch: 7 }];
+  XLSX.utils.book_append_sheet(wb, wg, 'Visão geral');
   const ws = XLSX.utils.json_to_sheet(linhas.length ? linhas : [{ Resposta: 'Nenhuma resposta' }]);
   ws['!cols'] = [{ wch: 8 }, { wch: 34 }, { wch: 34 }, { wch: 70 }, { wch: 16 }, { wch: 7 }, { wch: 20 }, { wch: 15 }, { wch: 10 }, { wch: 8 }, { wch: 8 }, { wch: 14 }];
   XLSX.utils.book_append_sheet(wb, ws, 'Respostas');
