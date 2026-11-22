@@ -16,7 +16,7 @@ export function Painel({ sessaoId }) {
 
   return html`<main class="painel">
     <header class="painel-topo">
-      <a class="painel-logo" href="#/painel"><${MarcaOO} classe="painel-marca" /> Dinâmica</a>
+      <a class="painel-logo" href="#/painel"><${MarcaOO} classe="painel-marca" /> Sala</a>
       <div class="painel-usuario">
         ${backend.modo === 'supabase' ? html`<span class="suave">${usuario.email}</span>` : null}
         ${backend.modo === 'supabase' ? html`<button class="btn btn-fantasma btn-pequeno" onClick=${async () => { await backend.sair(); setUsuario(null); }}>Sair</button>` : null}
@@ -38,7 +38,7 @@ function Login({ aoEntrar }) {
   };
   return html`<main class="painel painel-login">
     <form class="cartao login" onSubmit=${entrar}>
-      <div class="painel-logo"><${MarcaOO} classe="painel-marca" /> Dinâmica</div>
+      <div class="painel-logo"><${MarcaOO} classe="painel-marca" /> Sala</div>
       <h1>Entrar no painel</h1>
       <p class="suave">Acesso restrito ao time Oito&Onze.</p>
       <label class="rotulo-campo" for="email">E-mail</label>

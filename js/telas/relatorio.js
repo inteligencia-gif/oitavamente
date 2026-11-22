@@ -29,7 +29,7 @@ export function Relatorio({ id }) {
 
   useEffect(() => {
     if (estado.rel) document.title = `Relatório · ${estado.rel.sessao.nome}`;
-    return () => { document.title = 'Dinâmica O&O'; };
+    return () => { document.title = 'Sala O&O'; };
   }, [estado.rel]);
 
   if (estado.carregando) return html`<main class="relatorio"><${Carregando} texto="Montando o relatório…" /></main>`;
