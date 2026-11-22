@@ -126,7 +126,7 @@ export function Telao({ codigo, chave }) {
             </div>` : null}
           </div>
           ${revelado
-            ? html`<${Prioridades} top=${dados.top || []} etiquetas=${etiquetas} caixa=${mural} />`
+            ? html`<${Prioridades} top=${dados.top || []} etiquetas=${etiquetas} votantes=${votantes} caixa=${mural} />`
             : !aberto && respostas.length
             ? html`<${Resultados} modo=${sessao.visualizacao} respostas=${respostas} etiquetas=${etiquetas} caixa=${mural} />`
             : respostas.length

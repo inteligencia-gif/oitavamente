@@ -107,22 +107,35 @@ export function Nuvem({ respostas, caixa }) {
 }
 
 // ---------- As 3 mais votadas (depois que o facilitador revela) ----------
-export function Prioridades({ top, etiquetas, caixa }) {
+// Ranking: o 1º lugar em destaque, barras do tamanho dos votos e revelação de
+// baixo para cima (3º, 2º e por fim o 1º), para criar expectativa na sala.
+export function Prioridades({ top, etiquetas, votantes = 0, caixa }) {
   const etq = new Map(etiquetas.map((e) => [e.id, e]));
   if (!top.length) return html`<div ref=${caixa} class="mural-vazio">Nenhum voto nesta pergunta.</div>`;
-  return html`<div ref=${caixa} class="prioridades" style=${{ '--itens': Math.min(top.length, 5) }}>
+  const max = Math.max(...top.map((r) => r.votos));
+  const n = top.length;
+  return html`<ol ref=${caixa} class=${`ranking ${n > 3 ? 'ranking-longo' : ''}`}>
     ${top.map((r, i) => {
       const e = etq.get(r.etiqueta_id);
-      return html`<article key=${r.id} class=${`prioridade p${r.posicao}`} style=${{ ...varsEtiqueta(e?.cor || CORES_ETIQUETA[0]), animationDelay: `${i * 0.25}s` }}>
-        <span class="prioridade-posicao">${r.posicao}º</span>
-        <p>${r.texto}</p>
-        <div class="prioridade-rodape">
-          ${e ? html`<span class="cartao-etiqueta">${e.nome}</span>` : html`<span></span>`}
-          <span class="prioridade-votos">${r.votos} ${r.votos === 1 ? 'voto' : 'votos'}</span>
+      const atraso = (n - 1 - i) * 0.7; // o último aparece primeiro
+      const sala = votantes ? Math.round((r.votos / votantes) * 100) : null;
+      return html`<li key=${r.id} class=${`ranking-item p${r.posicao}`}
+        style=${{ ...varsEtiqueta(e?.cor || CORES_ETIQUETA[0]), '--atraso': `${atraso}s`, '--parte': `${Math.max(6, (r.votos / max) * 100)}%` }}>
+        <span class="ranking-posicao">${r.posicao}º</span>
+        <div class="ranking-corpo">
+          <p>${r.texto}</p>
+          <div class="ranking-linha">
+            <span class="ranking-trilho"><i></i></span>
+            <span class="ranking-votos"><b>${r.votos}</b> ${r.votos === 1 ? 'voto' : 'votos'}</span>
+          </div>
+          <div class="ranking-meta">
+            ${e ? html`<span class="cartao-etiqueta">${e.nome}</span>` : null}
+            ${sala !== null ? html`<span>${sala}% da sala escolheu</span>` : null}
+          </div>
         </div>
-      </article>`;
+      </li>`;
     })}
-  </div>`;
+  </ol>`;
 }
 
 // ---------- Resumo geral da dinâmica ----------
