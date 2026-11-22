@@ -109,12 +109,12 @@ export function Nuvem({ respostas, caixa }) {
 // ---------- As 3 mais votadas (depois que o facilitador revela) ----------
 // Ranking: o 1º lugar em destaque, barras do tamanho dos votos e revelação de
 // baixo para cima (3º, 2º e por fim o 1º), para criar expectativa na sala.
-export function Prioridades({ top, etiquetas, votantes = 0, caixa }) {
+export function Prioridades({ top, etiquetas, votantes = 0, caixa, classe = '' }) {
   const etq = new Map(etiquetas.map((e) => [e.id, e]));
   if (!top.length) return html`<div ref=${caixa} class="mural-vazio">Nenhum voto nesta pergunta.</div>`;
   const max = Math.max(...top.map((r) => r.votos));
   const n = top.length;
-  return html`<ol ref=${caixa} class=${`ranking ${n > 3 ? 'ranking-longo' : ''}`}>
+  return html`<ol ref=${caixa} class=${`ranking ${n > 3 ? 'ranking-longo' : ''} ${classe}`}>
     ${top.map((r, i) => {
       const e = etq.get(r.etiqueta_id);
       const atraso = (n - 1 - i) * 0.7; // o último aparece primeiro

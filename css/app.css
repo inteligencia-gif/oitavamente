@@ -558,11 +558,19 @@ body[data-tela="s"] { background: #FFFFFF; }
 
 /* Celular: prioridades da sala */
 .prioridades-sala { display: grid; justify-items: center; gap: 10px; text-align: center; padding-top: 10px; }
-.prioridades-lista { list-style: none; margin: 8px 0 0; padding: 0; width: 100%; display: grid; gap: 12px; text-align: left; }
-.prioridade-celular { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--raio); background: color-mix(in srgb, var(--cor, #FFE45C) 22%, #fff); box-shadow: var(--sombra-1); animation: chegar .6s cubic-bezier(.2, .8, .2, 1.2) both; }
-.prioridade-celular.p1 { background: color-mix(in srgb, var(--cor, #FFE45C) 38%, #fff); box-shadow: var(--sombra); }
-.prioridade-celular .prioridade-posicao { flex: 0 0 auto; display: grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px; border-radius: 999px; background: var(--oo-preto); color: var(--oo-amarelo); font-size: 14px; }
-.prioridade-meta { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+/* mesmo ranking do telão, em tamanho de celular (sem ajuste automático de letra) */
+.ranking.ranking-celular { --base: 16px; font-size: 16px; width: 100%; padding: 6px 0 0; gap: 12px; overflow: visible; text-align: left; }
+.ranking-celular .ranking-item { gap: 12px; padding: 14px 16px 14px 12px; border-radius: var(--raio); box-shadow: var(--sombra-1); }
+.ranking-celular .ranking-item.p1 { padding-block: 18px; box-shadow: var(--sombra-3); }
+.ranking-celular .ranking-posicao { width: 38px; height: 38px; font-size: 15px; }
+.ranking-celular .ranking-item.p1 .ranking-posicao { width: 46px; height: 46px; font-size: 18px; }
+.ranking-celular .ranking-corpo p { font-size: 16px; }
+.ranking-celular .ranking-item.p1 .ranking-corpo p { font-size: 18px; }
+.ranking-celular .ranking-trilho { height: 8px; }
+.ranking-celular .ranking-item.p1 .ranking-trilho { height: 10px; }
+.ranking-celular .ranking-votos { font-size: 12px; }
+.ranking-celular .ranking-votos b { font-size: 18px; }
+.ranking-celular .ranking-meta { font-size: 11px; }
 .envio-fechado > .tempo-celular { justify-self: stretch; width: 100%; margin-bottom: 4px; }
 
 /* Tela de espera: cachorrinho acenando */

@@ -5,6 +5,7 @@ import { useAoVivo } from '../lib/aoVivo.js';
 import { idParticipante, guardar, fmtHora, plural } from '../lib/util.js';
 import { varsVisual, varsEtiqueta } from '../lib/visual.js';
 import { Assinatura, Carregando, MarcaCliente } from './comum.js';
+import { Prioridades } from './resultados.js';
 import { useDesvio, useRestante, envioAberto, fmtTempo, prazoFinal } from '../lib/cronometro.js';
 
 // Ilustrações da espera entre uma pergunta e outra, alternando menina, cachorro e menino.
@@ -341,27 +342,12 @@ function Votacao({ foco, opcoes, meusVotos, etiquetas, pid, codigo, aoVotar, res
   </section>`;
 }
 
-// As 3 mais votadas, quando o facilitador revela o resultado.
+// As 3 mais votadas, quando o facilitador revela o resultado: o mesmo ranking do telão.
 function PrioridadesSala({ top, etiquetas }) {
-  const etq = new Map(etiquetas.map((e) => [e.id, e]));
   return html`<section class="prioridades-sala">
     <h2 class="fechado-titulo">As prioridades da sala</h2>
     <p class="fechado-texto">As ideias mais votadas nesta rodada.</p>
-    <ol class="prioridades-lista">
-      ${top.map((r) => {
-        const e = etq.get(r.etiqueta_id);
-        return html`<li key=${r.id} class=${`prioridade-celular p${r.posicao}`} style=${varsEtiqueta(e?.cor)}>
-          <span class="prioridade-posicao">${r.posicao}º</span>
-          <div class="opcao-corpo">
-            <span class="opcao-texto">${r.texto}</span>
-            <span class="prioridade-meta">
-              ${e ? html`<span class="chip">${e.nome}</span>` : null}
-              <span class="suave">${r.votos} ${r.votos === 1 ? 'voto' : 'votos'}</span>
-            </span>
-          </div>
-        </li>`;
-      })}
-    </ol>
+    <${Prioridades} top=${top} etiquetas=${etiquetas} classe="ranking-celular" />
   </section>`;
 }
 
