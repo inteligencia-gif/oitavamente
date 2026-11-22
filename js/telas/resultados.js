@@ -129,6 +129,7 @@ export function Prioridades({ top, etiquetas, votantes = 0, caixa, classe = '' }
             <span class="ranking-votos"><b>${r.votos}</b> ${r.votos === 1 ? 'voto' : 'votos'}</span>
           </div>
           <div class="ranking-meta">
+            ${r.posicao === 1 ? html`<span class="ranking-selo">${top.filter((x) => x.posicao === 1).length > 1 ? 'Empate no topo' : 'Mais votada'}</span>` : null}
             ${e ? html`<span class="cartao-etiqueta">${e.nome}</span>` : null}
             ${sala !== null ? html`<span>${sala}% da sala escolheu</span>` : null}
           </div>
