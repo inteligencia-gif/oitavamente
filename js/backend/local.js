@@ -37,6 +37,8 @@ const agora = () => new Date().toISOString();
 const espera = () => new Promise((r) => setTimeout(r, 60)); // simula rede
 
 const PUBLICOS = ['id', 'nome', 'cliente', 'codigo', 'visual', 'status', 'atividade_foco', 'envio_aberto', 'envio_prazo', 'tempo_resposta_seg', 'visualizacao', 'votacao_aberta', 'votacao_prazo', 'tempo_votacao_seg', 'resultado_visivel', 'resumo_visivel', 'resumo_visao', 'limite_caracteres', 'rotulo_atividade'];
+// o que passa para a cópia de uma sessão (além de perguntas e etiquetas)
+const COPIADOS = ['visual', 'tempo_resposta_seg', 'visualizacao', 'tempo_votacao_seg', 'resumo_visao', 'limite_caracteres', 'rotulo_atividade'];
 export const MAX_VOTOS = 3;
 const TEMPO_PADRAO = 480; // 8 minutos
 // passou do prazo e da tolerância de quem ainda estava escrevendo
@@ -276,6 +278,24 @@ export const backend = {
     const db = ler();
     if (dados.codigo && db.sessoes.some((s) => s.codigo === normalizarCodigo(dados.codigo))) throw new Error('Esse código já está em uso.');
     const s = novaSessao(db, dados);
+    gravar(db);
+    return s;
+  },
+
+  // Nova sessão com as mesmas perguntas, etiquetas e ajustes, sem respostas nem votos.
+  async duplicarSessao(id) {
+    await espera();
+    const db = ler();
+    const o = db.sessoes.find((x) => x.id === id);
+    if (!o) throw new Error('Sessão não encontrada.');
+    const s = novaSessao(db, { modelo: 'branco', nome: `${o.nome} (cópia)`, cliente: o.cliente });
+    db.atividades = db.atividades.filter((a) => a.sessao_id !== s.id);
+    db.etiquetas = db.etiquetas.filter((e) => e.sessao_id !== s.id);
+    for (const k of COPIADOS) s[k] = structuredClone(o[k]);
+    db.atividades.filter((a) => a.sessao_id === id).sort(porOrdem).forEach((a) => db.atividades.push(
+      { id: uid(), sessao_id: s.id, ordem: a.ordem, formato: a.formato, titulo: a.titulo, texto_apoio: a.texto_apoio || '' }));
+    db.etiquetas.filter((e) => e.sessao_id === id).sort(porOrdem).forEach((e) => db.etiquetas.push(
+      { id: uid(), sessao_id: s.id, ordem: e.ordem, nome: e.nome, cor: e.cor }));
     gravar(db);
     return s;
   },

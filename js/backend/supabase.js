@@ -94,6 +94,35 @@ export const backend = {
     return s;
   },
 
+  // Nova sessão com as mesmas perguntas, etiquetas e ajustes, sem respostas nem votos.
+  async duplicarSessao(id) {
+    const [o, atividades, etiquetas] = await Promise.all([
+      ok(sb.from('sessoes').select('*').eq('id', id).single()),
+      ok(sb.from('atividades').select('ordem, formato, titulo, texto_apoio').eq('sessao_id', id).order('ordem')),
+      ok(sb.from('etiquetas').select('ordem, nome, cor').eq('sessao_id', id).order('ordem')),
+    ]);
+    const s = await ok(sb.from('sessoes').insert({
+      nome: `${o.nome} (cópia)`,
+      cliente: o.cliente,
+      codigo: gerarCodigo(),
+      visual: o.visual,
+      tempo_resposta_seg: o.tempo_resposta_seg,
+      visualizacao: o.visualizacao,
+      tempo_votacao_seg: o.tempo_votacao_seg,
+      resumo_visao: o.resumo_visao,
+      limite_caracteres: o.limite_caracteres,
+      rotulo_atividade: o.rotulo_atividade,
+    }).select().single());
+    try {
+      if (atividades.length) await ok(sb.from('atividades').insert(atividades.map((a) => ({ ...a, sessao_id: s.id }))));
+      if (etiquetas.length) await ok(sb.from('etiquetas').insert(etiquetas.map((e) => ({ ...e, sessao_id: s.id }))));
+    } catch (e) {
+      await sb.from('sessoes').delete().eq('id', s.id); // não deixa uma cópia pela metade
+      throw e;
+    }
+    return s;
+  },
+
   async carregarSessao(id) {
     const desde = new Date(Date.now() - ONLINE_MS).toISOString();
     const [sessao, atividades, etiquetas, respostas, votos, online] = await Promise.all([

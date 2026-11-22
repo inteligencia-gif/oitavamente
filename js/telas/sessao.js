@@ -18,6 +18,7 @@ export function SessaoPainel({ id }) {
   const { dados, erro, recarregar } = useAoVivo(() => backend.carregarSessao(id), [id], { intervalo: 5000 });
   const [aba, setAba] = useState('conduzir');
   const [aviso, setAviso] = useState(null);
+  const [duplicando, setDuplicando] = useState(false);
 
   useEffect(() => {
     if (!aviso) return;
@@ -51,6 +52,18 @@ export function SessaoPainel({ id }) {
     setAviso({ texto: `Planilha gerada com ${plural(n, 'resposta', 'respostas')}.` });
   });
 
+  // Cópia com as mesmas perguntas, etiquetas e visual, sem respostas; abre a cópia em seguida.
+  const duplicar = async () => {
+    setDuplicando(true);
+    try {
+      const nova = await backend.duplicarSessao(sessao.id);
+      location.hash = `#/painel/${nova.id}`;
+    } catch (e) {
+      setAviso({ texto: e.message || 'Não deu para duplicar.', erro: true });
+      setDuplicando(false);
+    }
+  };
+
   return html`<div class="painel-miolo painel-sessao">
     <div class="painel-cabeca">
       <div>
@@ -64,6 +77,7 @@ export function SessaoPainel({ id }) {
       <div class="acoes">
         <a class="btn btn-fantasma" href=${linkTelao(sessao.codigo, sessao.chave_telao)} target="_blank" rel="noopener">Abrir telão</a>
         <a class="btn btn-fantasma" href=${linkParticipante(sessao.codigo)} target="_blank" rel="noopener">Ver como participante</a>
+        <button class="btn btn-fantasma" onClick=${duplicar} disabled=${duplicando}>${duplicando ? 'Duplicando…' : 'Duplicar'}</button>
         <a class="btn btn-fantasma" href=${`#/relatorio/${sessao.id}`} target="_blank" rel="noopener">Relatório (PDF)</a>
         <button class="btn btn-escuro" onClick=${exportar}>${sessao.modo_teste ? 'Exportar ensaio' : 'Exportar planilha'}</button>
       </div>
